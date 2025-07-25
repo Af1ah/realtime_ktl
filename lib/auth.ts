@@ -14,6 +14,7 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string, role?: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
   setUser: (user: User) => void;
@@ -50,6 +51,34 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           console.error('Login error:', error);
+          throw error;
+        }
+      },
+
+      register: async (email: string, password: string, name: string, role: string = 'viewer') => {
+        try {
+          // TODO: Replace with actual API call
+          const response = await fetch('/api/auth/register/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password, name, role }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Registration failed');
+          }
+
+          const data = await response.json();
+          
+          set({
+            user: data.user,
+            accessToken: data.access_token,
+            isAuthenticated: true,
+          });
+        } catch (error) {
+          console.error('Registration error:', error);
           throw error;
         }
       },
