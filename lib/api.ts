@@ -110,6 +110,20 @@ export const incidentAPI = {
     api.post(`/incidents/${id}/resolve/`),
 };
 
+export const mapAPI = {
+  getLiveView: (params?: any) =>
+    api.get('/map/live/', { params }),
+  
+  getTrafficLayer: (params?: any) =>
+    api.get('/map/traffic/', { params }),
+  
+  getVehicleLocations: () =>
+    api.get('/map/vehicles/'),
+  
+  getIncidentMarkers: () =>
+    api.get('/map/incidents/'),
+};
+
 export const analyticsAPI = {
   getTrafficStats: (params?: any) =>
     api.get('/analytics/traffic-stats/', { params }),

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,13 @@ export function DashboardHeader() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { isConnected } = useWebSocketStore();
-  const [notifications] = useState([
+  interface Notification {
+    id: number;
+    message: string;
+    time: string;
+  }
+
+  const [notifications] = useState<Notification[]>([
     { id: 1, message: 'New incident reported on Highway 101', time: '2 min ago' },
     { id: 2, message: 'Vehicle KTL-001 completed route', time: '5 min ago' },
     { id: 3, message: 'Traffic congestion detected on Main St', time: '10 min ago' },
@@ -34,17 +41,15 @@ export function DashboardHeader() {
     router.push('/login');
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-red-100 text-red-800';
-      case 'dispatcher':
-        return 'bg-blue-100 text-blue-800';
-      case 'driver':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getRoleColor = (role: string): string => {
+    const roleColors = {
+      admin: 'bg-red-100 text-red-800',
+      dispatcher: 'bg-blue-100 text-blue-800',
+      driver: 'bg-green-100 text-green-800',
+      viewer: 'bg-gray-100 text-gray-800'
+    } as const;
+
+    return roleColors[role as keyof typeof roleColors] || roleColors.viewer;
   };
 
   return (
@@ -117,10 +122,10 @@ export function DashboardHeader() {
                       {user?.name || 'User'}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email}
+                      {user?.email || 'No email'}
                     </p>
                     <Badge className={cn("w-fit text-xs", getRoleColor(user?.role || 'viewer'))}>
-                      {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
+                      {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Viewer'}
                     </Badge>
                   </div>
                 </DropdownMenuLabel>

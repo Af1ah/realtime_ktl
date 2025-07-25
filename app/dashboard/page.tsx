@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,71 +50,92 @@ export default function DashboardPage() {
     avgResponseTime: '4.2 min',
     totalRoutes: 342,
     activeUsers: 45,
-    systemUptime: '99.8%'
+    systemUptime: '99.9%',
   });
 
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([
     {
       id: 1,
-      type: 'incident',
-      message: 'New traffic incident reported on Highway 101',
+      type: 'vehicle',
+      message: 'Vehicle KL-01-AB-1234 reported location update',
       timestamp: '2 minutes ago',
-      status: 'warning'
+      status: 'success'
     },
     {
       id: 2,
-      type: 'vehicle',
-      message: 'Vehicle KTL-001 completed route successfully',
+      type: 'incident',
+      message: 'Traffic congestion reported on NH-47',
       timestamp: '5 minutes ago',
-      status: 'success'
+      status: 'warning'
     },
     {
       id: 3,
       type: 'route',
-      message: 'Route optimization completed for downtown area',
-      timestamp: '8 minutes ago',
+      message: 'New optimal route calculated for 12 vehicles',
+      timestamp: '10 minutes ago',
       status: 'info'
     },
     {
       id: 4,
-      type: 'user',
-      message: 'New driver registered: John Smith',
-      timestamp: '12 minutes ago',
-      status: 'info'
+      type: 'incident',
+      message: 'Accident reported near City Center',
+      timestamp: '15 minutes ago',
+      status: 'error'
     },
     {
       id: 5,
-      type: 'incident',
-      message: 'Incident #INC-2024-001 resolved',
-      timestamp: '15 minutes ago',
+      type: 'user',
+      message: 'New dispatcher joined the system',
+      timestamp: '20 minutes ago',
       status: 'success'
     }
   ]);
 
+  const [vehicleLocations, setVehicleLocations] = useState([
+    { id: 1, name: 'KL-01-AB-1234', lat: 10.1234, lng: 76.3456, status: 'active' },
+    { id: 2, name: 'KL-01-CD-5678', lat: 10.2345, lng: 76.4567, status: 'active' },
+    { id: 3, name: 'KL-01-EF-9012', lat: 10.3456, lng: 76.5678, status: 'inactive' },
+  ]);
+
+  const [incidents, setIncidents] = useState([
+    { id: 1, type: 'accident', location: 'NH-47 Junction', severity: 'high', status: 'active' },
+    { id: 2, type: 'congestion', location: 'City Center', severity: 'medium', status: 'active' },
+    { id: 3, type: 'roadwork', location: 'Bypass Road', severity: 'low', status: 'planned' },
+  ]);
+
+
   useEffect(() => {
-    if (isConnected) {
-      // Subscribe to real-time updates
-      subscribe('dashboard_stats', (data) => {
-        setStats(prev => ({ ...prev, ...data }));
-      });
+    const interval = setInterval(() => {
+      // Simulate real-time updates
+      setStats(prev => ({
+        ...prev,
+        activeVehicles: Math.max(0, Math.min(prev.totalVehicles, prev.activeVehicles + Math.floor(Math.random() * 3) - 1)),
+        activeIncidents: Math.max(0, Math.min(prev.totalIncidents, prev.activeIncidents + Math.floor(Math.random() * 2) - 1))
+      }));
 
-      subscribe('system_notifications', (data) => {
-        if (data.type === 'activity') {
-          setRecentActivity(prev => [data.activity, ...prev.slice(0, 4)]);
-        }
-        
-        // Show toast notifications for important events
-        if (data.priority === 'high') {
-          toast.warning(data.message);
-        }
-      });
+      // Simulate new activity
+      const activities = [
+        'Vehicle location update received',
+        'Route optimization completed',
+        'Traffic incident reported',
+        'System health check passed',
+        'New user login detected'
+      ];
 
-      return () => {
-        unsubscribe('dashboard_stats');
-        unsubscribe('system_notifications');
-      };
-    }
-  }, [isConnected, subscribe, unsubscribe]);
+      const statuses: ('success' | 'warning' | 'error' | 'info')[] = ['success', 'warning', 'error', 'info'];
+      const types: ('vehicle' | 'incident' | 'route' | 'user')[] = ['vehicle', 'incident', 'route', 'user'];
+
+      setRecentActivities(prev => [{
+        id: Date.now(),
+        type: types[Math.floor(Math.random() * types.length)],
+        message: activities[Math.floor(Math.random() * activities.length)],
+        timestamp: 'Just now',
+        status: statuses[Math.floor(Math.random() * statuses.length)]
+      }, ...prev.slice(0, 4)]);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -225,7 +247,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity) => (
+              {recentActivities.map((activity) => (
                 <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex-shrink-0 mt-1">
                     <div className={`p-1 rounded-full ${getStatusColor(activity.status)}`}>
@@ -255,18 +277,22 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="outline">
-              <MapPin className="mr-2 h-4 w-4" />
-              View Live Map
-            </Button>
+            <Link href="/dashboard/map">
+              <Button className="w-full justify-start" variant="outline">
+                <MapPin className="mr-2 h-4 w-4" />
+                View Live Map
+              </Button>
+            </Link>
             <Button className="w-full justify-start" variant="outline">
               <AlertTriangle className="mr-2 h-4 w-4" />
               Report Incident
             </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Car className="mr-2 h-4 w-4" />
-              Add Vehicle
-            </Button>
+            <Link href="/dashboard/vehicles">
+              <Button className="w-full justify-start" variant="outline">
+                <Car className="mr-2 h-4 w-4" />
+                Manage Vehicles
+              </Button>
+            </Link>
             <Button className="w-full justify-start" variant="outline">
               <Route className="mr-2 h-4 w-4" />
               Optimize Routes
